@@ -13,7 +13,7 @@
           </q-item-section>
           <q-item-section class="list-text">O.R. Numbers</q-item-section>
         </q-item>
-        <!-- OR NUMBERS -->
+        <!-- TODO-LIST -->
         <q-item clickable v-ripple :to="{ name: 'todo-list' }">
           <q-item-section avatar class="margin-left-10">
             <q-icon
