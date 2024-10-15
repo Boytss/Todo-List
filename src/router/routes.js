@@ -62,6 +62,11 @@ const routes = [
             name: "todo-list",
             component: () => import("../pages/Onboarding/TodoList.vue"),
           },
+          {
+            path: "create-task",
+            name: "create-task",
+            component: () => import("../pages/Onboarding/CreateTask.vue"),
+          },
         ],
       },
     ],

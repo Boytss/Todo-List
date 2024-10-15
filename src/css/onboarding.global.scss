@@ -623,7 +623,7 @@
 * Main scroll
 */
 .onboarding-main-scroll {
-  padding: 0 24px 0 24px;
+  padding: 50 24px 50 24px;
   @media screen and (min-width: $breakpoint-sm-min) {
     overflow-y: scroll;
     &.standard-scroll {
