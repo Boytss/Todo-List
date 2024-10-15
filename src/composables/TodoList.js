@@ -24,21 +24,6 @@ const FetchTasks = () => {
   });
 };
 
-// Fetch a specific task by its ID
-const FetchTaskById = (taskId) => {
-  return new Promise((resolve, reject) => {
-    httpGet(`tasks/${taskId}`, {
-      success(response) {
-        selectedTask.value = response.data;
-        resolve(response.data);
-      },
-      catch(response) {
-        reject(response);
-      },
-    });
-  });
-};
-
 // Insert a new task into the database
 const InsertTask = (payload) => {
   // Create the payload according to the required structure
@@ -63,9 +48,19 @@ const InsertTask = (payload) => {
 };
 
 // Update an existing task by its ID
+const FetchTaskById = async (taskId) => {
+  try {
+    const response = await axios.get(`/api/tasks/${taskId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching task by ID:", error);
+    throw error;
+  }
+};
+
 const UpdateTask = (payload) => {
   return new Promise((resolve, reject) => {
-    httpPut(`tasks/${payload.id}`, payload, {
+    httpPut(`api.php?id=${payload.id}`, payload, {
       success(response) {
         const index = tasks.value.findIndex((task) => task.id === payload.id);
         if (index !== -1) {
@@ -73,8 +68,8 @@ const UpdateTask = (payload) => {
         }
         resolve(response.data);
       },
-      catch(response) {
-        reject(response);
+      catch(error) {
+        reject(error);
       },
     });
   });
@@ -84,15 +79,15 @@ const UpdateTask = (payload) => {
 const DeleteTask = (taskId) => {
   return new Promise((resolve, reject) => {
     httpDel(
-      `tasks/${taskId}`,
+      `api.php?id=${taskId}`,
       {},
       {
         success(response) {
           tasks.value = tasks.value.filter((task) => task.id !== taskId);
           resolve(response.data);
         },
-        catch(response) {
-          reject(response);
+        catch(error) {
+          reject(error);
         },
       }
     );

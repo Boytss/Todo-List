@@ -67,6 +67,11 @@ const routes = [
             name: "create-task",
             component: () => import("../pages/Onboarding/CreateTask.vue"),
           },
+          {
+            path: "/edit-task/:id",
+            name: "edit-task",
+            component: () => import("../pages/Onboarding/CreateTask.vue"),
+          },
         ],
       },
     ],

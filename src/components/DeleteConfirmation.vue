@@ -41,16 +41,21 @@
 </template>
 <script>
 import { ref, inject } from "vue";
-import { ToggleMainDialogState } from "../../../composables/Triggers";
+import { ToggleMainDialogState } from "../composables/Triggers";
 
 export default {
   setup() {
     let btnLoadingState = ref(false);
 
     let rows = ref([]);
-
+    const deleteFunction = inject("deleteTask");
     const deleteOR = inject("deleteOR");
-
+    const confirmDelete = async () => {
+      btnLoadingState.value = true;
+      await deleteFunction();
+      btnLoadingState.value = false;
+      closeDialog();
+    };
     const closeDialog = () => {
       ToggleMainDialogState();
     };
@@ -59,6 +64,7 @@ export default {
       deleteOR,
       closeDialog,
       btnLoadingState,
+      confirmDelete,
     };
   },
 };

@@ -5,7 +5,7 @@ import Filters from "../../../components/Filters.vue";
 import Pagination from "../../../components/Pagination.vue";
 import MainDialog from "../../../components/MainDialog.vue";
 import { ToggleMainDialogState } from "../../../composables/Triggers.js";
-import DeleteConfirmation from "../components/DeleteConfirmation.vue";
+import DeleteConfirmation from "../../../components/DeleteConfirmation.vue";
 import MobileFilter from "../../../components/MobileFilter.vue";
 import UserCard from "../components/UserCard.vue";
 import {

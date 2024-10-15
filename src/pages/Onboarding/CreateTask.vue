@@ -18,7 +18,7 @@
           </div>
 
           <div class="onboarding-main-scroll standard-scroll rowinput-task">
-            <q-form ref="taskFormRef" greedy @submit="createTaskForm()">
+            <q-form ref="taskFormRef" greedy @submit="createOrUpdateTask">
               <div>
                 <label class="text-weight-small q-pl-lg">Task Title</label>
                 <q-input
@@ -137,8 +137,8 @@
                 dense
                 flat
                 no-caps
-                label="save"
-                @click.prevent="createTaskForm"
+                :label="isEditing ? 'Update Task' : 'Create Task'"
+                @click.prevent="submitTask"
                 class="onboarding-border-accent-0 text-white onboarding-bg-accent-0 q-px-xl"
               />
             </q-form>

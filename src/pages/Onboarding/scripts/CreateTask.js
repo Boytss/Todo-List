@@ -1,9 +1,11 @@
 import { ref, reactive } from "vue"; // Importing necessary functions from Vue
 import { useQuasar } from "quasar"; // Import Quasar framework
+import { defineComponent, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router"; // Import Vue Router hooks
 import {
   InsertNewRange,
   InsertTask,
+  FetchTaskById,
   // Import other necessary functions from your composables
 } from "../../../composables/TodoList";
 
@@ -37,7 +39,24 @@ export default {
     const pageLoadingState = ref(false); // Loading state for the page
     const isORRangeCorrect = ref(true); // Validation state for OR range
     const btnLoadingState = ref(false); // Loading state for the button
-
+    onMounted(async () => {
+      if (isEditing.value) {
+        pageLoadingState.value = true;
+        try {
+          const task = await FetchTaskById(taskId);
+          taskForm.task_title = task.task_title;
+          taskForm.keyResults = task.keyResults;
+        } catch (error) {
+          console.error("Failed to fetch task:", error);
+          $q.notify({
+            type: "negative",
+            message: "Failed to load task data: " + error.message,
+          });
+        } finally {
+          pageLoadingState.value = false;
+        }
+      }
+    });
     // Method to add a new key result
     const addKeyResult = () => {
       taskForm.keyResults.push({ taskName: "", time: "" });
@@ -65,9 +84,9 @@ export default {
     };
     // Method to create a new task
     const taskFormRef = ref(null); // Declare a ref for the form
-
+    const isEditing = ref(false); // To track if we're editing or creating
     // Method to create a new task
-    const createTaskForm = async () => {
+    const createOrUpdateTask = async () => {
       try {
         if (!taskFormRef.value) {
           throw new Error("Form reference is not available");
@@ -82,30 +101,47 @@ export default {
           return;
         }
 
-        // Log the taskForm object before submitting
-        console.log("Submitting taskForm:", JSON.stringify(taskForm));
+        btnLoadingState.value = true;
 
-        // Call the InsertTask function with the correct payload
-        const response = await InsertTask({
-          task_title: taskForm.task_title, // Correctly reference task_title
-          keyResults: taskForm.keyResults, // Reference keyResults
-        });
+        const payload = {
+          task_title: taskForm.task_title,
+          keyResults: taskForm.keyResults,
+        };
 
-        $q.notify({ type: "positive", message: "Task created successfully!" });
-        console.log("Task successfully inserted:", response);
-        router.push("todo-list"); // Navigate to the todo list page
+        if (isEditing.value) {
+          payload.id = taskId;
+          await UpdateTask(payload);
+          $q.notify({
+            type: "positive",
+            message: "Task updated successfully!",
+          });
+        } else {
+          await InsertTask(payload);
+          $q.notify({
+            type: "positive",
+            message: "Task created successfully!",
+          });
+        }
+
+        router.push({ name: "todo-list" });
       } catch (error) {
         $q.notify({
           type: "negative",
-          message: "Failed to create task: " + error.message,
+          message:
+            `Failed to ${isEditing.value ? "update" : "create"} task: ` +
+            error.message,
         });
+      } finally {
+        btnLoadingState.value = false;
       }
     };
 
     // Return reactive properties and methods
     return {
+      submitTask,
+      isEditing,
       taskFormRef,
-      createTaskForm,
+      createOrUpdateTask,
       keyResults,
       addKeyResult,
       removeKeyResult,
@@ -113,6 +149,7 @@ export default {
       taskForm,
       fundTypes,
       form,
+      task,
       isORRangeCorrect,
       addNewRange,
       pageLoadingState,
@@ -132,7 +169,7 @@ export default {
       InsertTask(payload)
         .then((response) => {
           console.log("Task successfully inserted:", response);
-
+          console.log("Task submitted:", this.taskForm);
           // Ensure that `rows` is an array before pushing the new task
           if (Array.isArray(this.rows.value)) {
             this.rows.value.push(response); // Or push the necessary data from the response

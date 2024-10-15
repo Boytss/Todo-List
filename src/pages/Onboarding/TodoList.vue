@@ -20,7 +20,7 @@
               :labelVisible="false"
               :searchVisible="true"
               :filterDateVisible="false"
-              pathEndPoint="orNumbers"
+              pathEndPoint="TodoList"
             />
             <q-btn
               flat
@@ -98,12 +98,21 @@
                         clickable
                         v-close-popup
                         class="menu-list"
-                        @click="router.push({ name: 'qa-task-details' })"
+                        @click="
+                          $router.push({
+                            name: 'edit-task',
+                            params: { id: taskId },
+                          })
+                        "
                       >
                         <q-item-section>Edit</q-item-section>
                       </q-item>
-
-                      <q-item clickable v-close-popup class="menu-list">
+                      <q-item
+                        clickable
+                        v-close-popup
+                        class="menu-list"
+                        @click="confirmDelete(task)"
+                      >
                         <q-item-section>Delete</q-item-section>
                       </q-item>
                     </q-list>

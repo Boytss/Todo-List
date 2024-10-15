@@ -1,14 +1,22 @@
 import { ref, watch, onMounted, reactive } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
+import { ToggleMainDialogState } from "../../../composables/Triggers";
+import DeleteConfirmation from "../../../components/DeleteConfirmation.vue";
+import MainDialog from "../../../components/MainDialog.vue";
 import {
   InsertNewRange,
   InsertTask,
   FetchTasks,
   GetTasks,
+  DeleteTask,
 } from "../../../composables/TodoList";
 
 export default {
+  components: {
+    DeleteConfirmation,
+    MainDialog,
+  },
   setup() {
     const $q = useQuasar();
     const route = useRoute();
@@ -19,6 +27,22 @@ export default {
     const isORRangeCorrect = ref(true);
     const btnLoadingState = ref(false);
     const tasks = ref([]); // Initialize as an array
+    const deleteConfirmationDialog = ref(false);
+    const taskToDelete = ref(null);
+    const editTask = (taskId) => {
+      router.push({ name: "create-task", params: { id: taskId } });
+    };
+    const handleEditClick = (taskId) => {
+      console.log("Navigating to edit-task route with ID:", taskId);
+      router
+        .push({ name: "edit-task", params: { id: taskId.toString() } })
+        .then(() => {
+          console.log("Navigation successful");
+        })
+        .catch((err) => {
+          console.error("Navigation failed:", err);
+        });
+    };
     let watch_task = ref(false);
     const goToCreateTask = (event) => {
       event.stopPropagation();
@@ -99,18 +123,37 @@ export default {
     // Fetch tasks from the API
     const loadTasks = async () => {
       try {
+        pageLoadingState.value = true;
         const response = await FetchTasks();
         if (response.error) {
           console.error("API Error:", response.error);
           $q.notify({ type: "negative", message: response.error });
         } else {
           console.log("Fetched Tasks: ", response.tasks);
-          inProgressTasks.value = response.tasks || []; // Ensure tasks are set
+          inProgressTasks.value = response.tasks || [];
         }
       } catch (error) {
         $q.notify({ type: "negative", message: "Error loading tasks" });
       } finally {
         pageLoadingState.value = false;
+      }
+    };
+    const confirmDelete = (task) => {
+      taskToDelete.value = task;
+      ToggleMainDialogState();
+    };
+
+    const deleteTask = async () => {
+      try {
+        btnLoadingState.value = true;
+        await DeleteTask(taskToDelete.value.id);
+        $q.notify({ type: "positive", message: "Task deleted successfully" });
+        loadTasks(); // Reload tasks after deletion
+      } catch (error) {
+        $q.notify({ type: "negative", message: "Error deleting task" });
+      } finally {
+        btnLoadingState.value = false;
+        ToggleMainDialogState();
       }
     };
 
@@ -120,6 +163,9 @@ export default {
     });
 
     return {
+      router,
+      editTask,
+      handleEditClick,
       formatTime,
       formatDate,
       inProgressTasks,
@@ -134,6 +180,9 @@ export default {
       selectedUsersID,
       tasks,
       watch_task,
+      confirmDelete,
+      deleteTask,
+      deleteConfirmationDialog,
     };
   },
 };
