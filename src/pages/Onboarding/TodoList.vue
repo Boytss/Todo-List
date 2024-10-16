@@ -101,18 +101,13 @@
                         @click="
                           $router.push({
                             name: 'edit-task',
-                            params: { id: taskId },
+                            params: { id: task.id },
                           })
                         "
                       >
                         <q-item-section>Edit</q-item-section>
                       </q-item>
-                      <q-item
-                        clickable
-                        v-close-popup
-                        class="menu-list"
-                        @click="confirmDelete(task)"
-                      >
+                      <q-item>
                         <q-item-section>Delete</q-item-section>
                       </q-item>
                     </q-list>

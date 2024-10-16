@@ -2,10 +2,12 @@ import { ref, reactive } from "vue"; // Importing necessary functions from Vue
 import { useQuasar } from "quasar"; // Import Quasar framework
 import { defineComponent, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router"; // Import Vue Router hooks
+
 import {
   InsertNewRange,
   InsertTask,
   FetchTaskById,
+  UpdateTask,
   // Import other necessary functions from your composables
 } from "../../../composables/TodoList";
 
@@ -15,6 +17,9 @@ export default {
     const route = useRoute(); // Access the current route
     const router = useRouter(); // Access the router instance
     const tasks = ref([]); // Ensure 'tasks' is initialized as an array
+    const taskFormRef = ref(null); // Declare a ref for the form
+    const isEditing = ref(!!route.params.id); // Check if editing
+    const taskId = route.params.id; // Gets the task ID if present
 
     // Define reactive properties
     const keyResults = ref([{ task_title: "", time: "" }]); // Initialize keyResults
@@ -41,16 +46,32 @@ export default {
     const btnLoadingState = ref(false); // Loading state for the button
     onMounted(async () => {
       if (isEditing.value) {
-        pageLoadingState.value = true;
         try {
+          pageLoadingState.value = true;
+          console.log("Fetching task with ID:", taskId);
           const task = await FetchTaskById(taskId);
+          console.log("Fetched task data:", task);
+
+          // Assuming task should be an array, make sure to check its structure
+          if (Array.isArray(task)) {
+            tasks.value = task;
+          } else {
+            tasks.value = []; // Default to an empty array if task is not an array
+          }
+
+          // Proceed with populating taskForm as you were
           taskForm.task_title = task.task_title;
-          taskForm.keyResults = task.keyResults;
+          taskForm.keyResults = task.keyResults.map((kr) => ({
+            taskName: kr.task_name || kr.taskName,
+            time: kr.time,
+          }));
+
+          console.log("Updated taskForm:", taskForm);
         } catch (error) {
-          console.error("Failed to fetch task:", error);
+          console.error("Failed to fetch task for editing", error);
           $q.notify({
             type: "negative",
-            message: "Failed to load task data: " + error.message,
+            message: "Failed to load task for editing",
           });
         } finally {
           pageLoadingState.value = false;
@@ -83,26 +104,10 @@ export default {
       });
     };
     // Method to create a new task
-    const taskFormRef = ref(null); // Declare a ref for the form
-    const isEditing = ref(false); // To track if we're editing or creating
+
     // Method to create a new task
     const createOrUpdateTask = async () => {
       try {
-        if (!taskFormRef.value) {
-          throw new Error("Form reference is not available");
-        }
-
-        const isValid = await taskFormRef.value.validate();
-        if (!isValid) {
-          $q.notify({
-            type: "negative",
-            message: "Please fill in all fields.",
-          });
-          return;
-        }
-
-        btnLoadingState.value = true;
-
         const payload = {
           task_title: taskForm.task_title,
           keyResults: taskForm.keyResults,
@@ -110,30 +115,52 @@ export default {
 
         if (isEditing.value) {
           payload.id = taskId;
+          // Bypass tasks-related code for debugging purposes
+          // const taskIndex = tasks.value.findIndex((task) => task.id === taskId);
           await UpdateTask(payload);
-          $q.notify({
-            type: "positive",
-            message: "Task updated successfully!",
-          });
         } else {
           await InsertTask(payload);
+        }
+
+        $q.notify({
+          type: "positive",
+          message: `Task ${
+            isEditing.value ? "updated" : "created"
+          } successfully!`,
+        });
+        router.push({ name: "todo-list" });
+      } catch (error) {
+        console.error("Error in createOrUpdateTask:", error);
+        $q.notify({
+          type: "negative",
+          message: `Failed to ${isEditing.value ? "update" : "create"} task: ${
+            error.message
+          }`,
+        });
+      }
+    };
+    const submitTask = () => {
+      const payload = {
+        task_title: taskForm.task_title,
+        keyResults: taskForm.keyResults,
+      };
+
+      InsertTask(payload)
+        .then((response) => {
+          console.log("Task successfully inserted:", response);
           $q.notify({
             type: "positive",
             message: "Task created successfully!",
           });
-        }
-
-        router.push({ name: "todo-list" });
-      } catch (error) {
-        $q.notify({
-          type: "negative",
-          message:
-            `Failed to ${isEditing.value ? "update" : "create"} task: ` +
-            error.message,
+          router.push({ name: "todo-list" });
+        })
+        .catch((error) => {
+          console.error("Error inserting task:", error);
+          $q.notify({
+            type: "negative",
+            message: "Failed to create task: " + error.message,
+          });
         });
-      } finally {
-        btnLoadingState.value = false;
-      }
     };
 
     // Return reactive properties and methods
@@ -149,7 +176,7 @@ export default {
       taskForm,
       fundTypes,
       form,
-      task,
+
       isORRangeCorrect,
       addNewRange,
       pageLoadingState,

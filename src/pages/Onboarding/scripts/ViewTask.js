@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ToggleMainDialogState } from "../../../composables/Triggers";
 import DeleteConfirmation from "../../../components/DeleteConfirmation.vue";
 import MainDialog from "../../../components/MainDialog.vue";
+
 import {
   InsertNewRange,
   InsertTask,
@@ -14,8 +15,8 @@ import {
 
 export default {
   components: {
-    DeleteConfirmation,
     MainDialog,
+    DeleteConfirmation,
   },
   setup() {
     const $q = useQuasar();
@@ -27,7 +28,7 @@ export default {
     const isORRangeCorrect = ref(true);
     const btnLoadingState = ref(false);
     const tasks = ref([]); // Initialize as an array
-    const deleteConfirmationDialog = ref(false);
+
     const taskToDelete = ref(null);
     const editTask = (taskId) => {
       router.push({ name: "create-task", params: { id: taskId } });
@@ -182,7 +183,6 @@ export default {
       watch_task,
       confirmDelete,
       deleteTask,
-      deleteConfirmationDialog,
     };
   },
 };

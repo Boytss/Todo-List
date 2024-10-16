@@ -13,7 +13,7 @@
           >
             <q-btn @click="$router.go(-1)" round dense flat icon="arrow_back" />
             <h5 class="text-26 text-semibold q-my-none q-ml-sm">
-              {{ route.params.id ? "Edit" : "Create New" }} Task
+              {{ isEditing ? "Edit" : "Create New" }} Task
             </h5>
           </div>
 
@@ -138,7 +138,6 @@
                 flat
                 no-caps
                 :label="isEditing ? 'Update Task' : 'Create Task'"
-                @click.prevent="submitTask"
                 class="onboarding-border-accent-0 text-white onboarding-bg-accent-0 q-px-xl"
               />
             </q-form>

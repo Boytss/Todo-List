@@ -47,24 +47,41 @@ const InsertTask = (payload) => {
   });
 };
 
-// Update an existing task by its ID
-const FetchTaskById = async (taskId) => {
-  try {
-    const response = await axios.get(`/api/tasks/${taskId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching task by ID:", error);
-    throw error;
-  }
+const FetchTaskById = (taskId) => {
+  return new Promise((resolve, reject) => {
+    httpGet(`/api.php?id=${taskId}`, {
+      success(response) {
+        console.log("Raw response from FetchTaskById:", response);
+        // Ensure the response data has the correct structure
+        const task = {
+          id: response.data.id,
+          task_title: response.data.task_title,
+          keyResults: response.data.keyResults.map((kr) => ({
+            taskName: kr.task_name || kr.taskName,
+            time: kr.time,
+          })),
+        };
+        console.log("Processed task data:", task);
+        resolve(task);
+      },
+      catch(error) {
+        console.error("Error in FetchTaskById:", error);
+        reject(error);
+      },
+    });
+  });
 };
-
 const UpdateTask = (payload) => {
   return new Promise((resolve, reject) => {
     httpPut(`api.php?id=${payload.id}`, payload, {
       success(response) {
-        const index = tasks.value.findIndex((task) => task.id === payload.id);
-        if (index !== -1) {
-          tasks.value[index] = response.data;
+        if (Array.isArray(tasks.value)) {
+          const index = tasks.value.findIndex((task) => task.id === payload.id);
+          if (index !== -1) {
+            tasks.value[index] = response.data;
+          }
+        } else {
+          console.error("tasks.value is not an array:", tasks.value);
         }
         resolve(response.data);
       },
@@ -74,7 +91,6 @@ const UpdateTask = (payload) => {
     });
   });
 };
-
 // Delete a task by its ID
 const DeleteTask = (taskId) => {
   return new Promise((resolve, reject) => {
