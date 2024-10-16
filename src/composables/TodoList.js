@@ -99,10 +99,12 @@ const DeleteTask = (taskId) => {
       {},
       {
         success(response) {
-          tasks.value = tasks.value.filter((task) => task.id !== taskId);
-          resolve(response.data);
+          // Log the response to ensure it was successful
+          console.log("Delete response:", response);
+          resolve(response.data); // Resolve the promise here
         },
         catch(error) {
+          console.error("Delete error:", error);
           reject(error);
         },
       }

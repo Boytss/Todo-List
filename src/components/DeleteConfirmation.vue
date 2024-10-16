@@ -21,8 +21,8 @@
     </p>
 
     <q-btn
-      @click="deleteOR"
-      :loading="btnLoadingState"
+      @click="$emit('confirm')"
+      :loading="loading"
       flat
       no-caps
       label="Yes, I'm sure"
@@ -32,7 +32,7 @@
       }`"
     />
     <div
-      @click="closeDialog()"
+      @click="$emit('cancel')"
       class="full-width q-py-sm cursor-pointer text-14"
     >
       Cancel

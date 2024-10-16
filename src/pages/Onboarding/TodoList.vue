@@ -108,12 +108,23 @@
                         <q-item-section>Edit</q-item-section>
                       </q-item>
                       <q-item>
-                        <q-item-section>Delete</q-item-section>
+                        <q-item-section
+                          clickable
+                          v-close-popup
+                          @click="showDeleteConfirmation(task.id)"
+                          >Delete</q-item-section
+                        >
                       </q-item>
                     </q-list>
                   </q-menu>
                 </q-btn>
               </q-item-section>
+              <q-dialog v-model="deleteConfirmations[task.id]">
+                <DeleteConfirmation
+                  @confirm="deleteTask(task.id)"
+                  @cancel="hideDeleteConfirmation(task.id)"
+                />
+              </q-dialog>
             </template>
 
             <q-card>

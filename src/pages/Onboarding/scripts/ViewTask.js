@@ -28,8 +28,34 @@ export default {
     const isORRangeCorrect = ref(true);
     const btnLoadingState = ref(false);
     const tasks = ref([]); // Initialize as an array
+    const deleteConfirmations = reactive({});
+    const showDeleteConfirmation = (taskId) => {
+      deleteConfirmations[taskId] = true;
+    };
+    const hideDeleteConfirmation = (taskId) => {
+      deleteConfirmations[taskId] = false;
+    };
+    const deleteTask = async (taskId) => {
+      try {
+        console.log("Current tasks before deletion:", inProgressTasks.value);
 
-    const taskToDelete = ref(null);
+        await DeleteTask(taskId); // Call your delete method
+
+        // Filter the tasks locally
+        inProgressTasks.value = inProgressTasks.value.filter(
+          (task) => task.id !== taskId
+        );
+        console.log("Tasks after deletion:", inProgressTasks.value);
+
+        $q.notify({ type: "positive", message: "Task deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting task:", error);
+        $q.notify({ type: "negative", message: "Error deleting task" });
+      } finally {
+        hideDeleteConfirmation(taskId);
+      }
+    };
+
     const editTask = (taskId) => {
       router.push({ name: "create-task", params: { id: taskId } });
     };
@@ -121,6 +147,18 @@ export default {
         hour12: true,
       });
     }
+    const confirmDelete = (task) => {
+      taskToDelete.value = task;
+      showDeleteConfirmation.value = true;
+    };
+
+    const cancelDelete = () => {
+      showDeleteConfirmation.value = false;
+      taskToDelete.value = null;
+    };
+
+    // provide("deleteTask", deleteTask);
+    // Fetch tasks from the API
     // Fetch tasks from the API
     const loadTasks = async () => {
       try {
@@ -139,24 +177,6 @@ export default {
         pageLoadingState.value = false;
       }
     };
-    const confirmDelete = (task) => {
-      taskToDelete.value = task;
-      ToggleMainDialogState();
-    };
-
-    const deleteTask = async () => {
-      try {
-        btnLoadingState.value = true;
-        await DeleteTask(taskToDelete.value.id);
-        $q.notify({ type: "positive", message: "Task deleted successfully" });
-        loadTasks(); // Reload tasks after deletion
-      } catch (error) {
-        $q.notify({ type: "negative", message: "Error deleting task" });
-      } finally {
-        btnLoadingState.value = false;
-        ToggleMainDialogState();
-      }
-    };
 
     // Call the method when the component is mounted
     onMounted(() => {
@@ -164,6 +184,10 @@ export default {
     });
 
     return {
+      deleteConfirmations,
+      showDeleteConfirmation,
+      hideDeleteConfirmation,
+      deleteTask,
       router,
       editTask,
       handleEditClick,
