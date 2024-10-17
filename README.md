@@ -79,4 +79,12 @@ This guide will help you set up and run the To-Do List application, including th
    - Click on the **To-Do List** link to view and manage tasks.
 
 3. **Create a New Task**:
+
    - Click the **Create New Task** button to add a new task, including key results, tags, and milestones.
+
+4. **Edit Task**:
+
+   - Click the **Edit** To edit a task, click the To-Do List expansion, then click the three-sided dot next to the task and select Edit.
+
+5. **Delete Task**:
+   - Click the **Delete** To edit a task, click the To-Do List expansion, then click the three-sided dot next to the task and select Delete.
