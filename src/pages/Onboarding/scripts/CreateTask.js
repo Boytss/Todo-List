@@ -16,19 +16,24 @@ export default {
     const $q = useQuasar(); // Initialize Quasar
     const route = useRoute(); // Access the current route
     const router = useRouter(); // Access the router instance
-    const tasks = ref([]); // Ensure 'tasks' is initialized as an array
-    const taskFormRef = ref(null); // Declare a ref for the form
-    const isEditing = ref(!!route.params.id); // Check if editing
-    const taskId = route.params.id; // Gets the task ID if present
 
+    // Reactive variables and refs
+    const tasks = ref([]); // Array to hold tasks
+    const taskFormRef = ref(null); // Reference for the task form
+    const isEditing = ref(!!route.params.id); // Check if editing an existing task
+    const taskId = route.params.id; // Get the task ID from the route
+    const rows = ref([]); // To hold data rows
+    const newRangeForm = ref(null); // To hold new range form data
+    const pageLoadingState = ref(false); // Loading state for the page
+    const isORRangeCorrect = ref(true); // Validation state for OR range
+    const btnLoadingState = ref(false); // Loading state for the button
     // Define reactive properties
     const keyResults = ref([{ task_title: "", time: "" }]); // Initialize keyResults
+
     const taskForm = reactive({
       task_title: "", // Task title
       keyResults: [{ taskName: "", time: "" }], // Array of key result objects
     });
-    const rows = ref([]); // To hold data rows
-    const newRangeForm = ref(null); // To hold new range form data
 
     // Define form properties
     const form = ref({
@@ -41,9 +46,7 @@ export default {
       { id: 2, name: "Special Fund" },
     ]); // Sample fund types
 
-    const pageLoadingState = ref(false); // Loading state for the page
-    const isORRangeCorrect = ref(true); // Validation state for OR range
-    const btnLoadingState = ref(false); // Loading state for the button
+    // Fetch task data when the component is mounted, if editing
     onMounted(async () => {
       if (isEditing.value) {
         try {
@@ -78,6 +81,7 @@ export default {
         }
       }
     });
+
     // Method to add a new key result
     const addKeyResult = () => {
       taskForm.keyResults.push({ taskName: "", time: "" });
@@ -103,7 +107,6 @@ export default {
         }
       });
     };
-    // Method to create a new task
 
     // Method to create a new task
     const createOrUpdateTask = async () => {
@@ -139,6 +142,7 @@ export default {
         });
       }
     };
+
     const submitTask = () => {
       const payload = {
         task_title: taskForm.task_title,
@@ -187,6 +191,7 @@ export default {
     };
   },
   methods: {
+    // Method to submit a new task
     submitTask() {
       const payload = {
         task_title: this.taskForm.task_title, // Ensure task_title is correct

@@ -19,22 +19,34 @@ export default {
     DeleteConfirmation,
   },
   setup() {
-    const $q = useQuasar();
-    const route = useRoute();
-    const router = useRouter();
-    const inProgressTasks = ref([]);
-    const doneTasks = ref([]);
-    const pageLoadingState = ref(false);
-    const isORRangeCorrect = ref(true);
-    const btnLoadingState = ref(false);
-    const tasks = ref([]); // Initialize as an array
-    const deleteConfirmations = reactive({});
+    const $q = useQuasar(); // Quasar UI instance
+    const route = useRoute(); // Current route
+    const router = useRouter(); // Router instance
+
+    // State variables
+    const inProgressTasks = ref([]); // Tasks that are in progress
+    const doneTasks = ref([]); // Completed tasks
+    const pageLoadingState = ref(false); // Loading state for the page
+    const isORRangeCorrect = ref(true); // Validation flag for OR range
+    const btnLoadingState = ref(false); // Button loading state
+    const tasks = ref([]); // General tasks
+    const deleteConfirmations = reactive({}); // Track delete confirmations for tasks
+    const selectAll = ref(false); // Select all checkbox state
+    const selectedUsersID = ref([]); // Array of selected user IDs
+
+    let watch_task = ref(false); // Watcher flag for tasks
+    const rowsWithCheckBox = ref([]); // Rows for the checkbox
+
+    // Show delete confirmation dialog for a specific task
     const showDeleteConfirmation = (taskId) => {
       deleteConfirmations[taskId] = true;
     };
+
+    // Hide delete confirmation dialog for a specific task
     const hideDeleteConfirmation = (taskId) => {
       deleteConfirmations[taskId] = false;
     };
+    // Delete a task by its ID
     const deleteTask = async (taskId) => {
       try {
         console.log("Current tasks before deletion:", inProgressTasks.value);
@@ -56,9 +68,12 @@ export default {
       }
     };
 
+    // Navigate to the edit task page
     const editTask = (taskId) => {
       router.push({ name: "create-task", params: { id: taskId } });
     };
+
+    // Handle the edit button click
     const handleEditClick = (taskId) => {
       console.log("Navigating to edit-task route with ID:", taskId);
       router
@@ -70,76 +85,24 @@ export default {
           console.error("Navigation failed:", err);
         });
     };
-    let watch_task = ref(false);
     const goToCreateTask = (event) => {
       event.stopPropagation();
       router.push({ name: "create-task" });
     };
 
-    const rowsWithCheckBox = ref([
-      {
-        id: 1,
-        name: "Make To-Do List Design",
-        overall: "8:00 AM",
-        action: " ",
-        selected: false,
-      },
-      {
-        id: 2,
-        name: "Fill Up OJT Evaluation Form",
-        overall: "12:00 PM",
-        action: " ",
-        selected: false,
-      },
-      {
-        id: 3,
-        name: "Make To-Do List Design",
-        overall: "8:00 AM",
-        action: " ",
-        selected: false,
-      },
-      {
-        id: 4,
-        name: "Fill Up OJT Evaluation Form",
-        overall: "12:00 PM",
-        action: " ",
-        selected: false,
-      },
-    ]);
-
-    const selectAll = ref(false);
-    const selectedUsersID = ref([]);
-
-    watch(selectAll, (newValue) => {
-      rowsWithCheckBox.value.forEach((row) => {
-        row.selected = newValue;
-      });
-      selectedUsersID.value = newValue
-        ? rowsWithCheckBox.value.map((row) => row.id)
-        : [];
-    });
-
-    watch(
-      () => rowsWithCheckBox.value.map((row) => row.selected),
-      (newSelectedStates) => {
-        selectAll.value = newSelectedStates.every(Boolean);
-        selectedUsersID.value = rowsWithCheckBox.value
-          .filter((row, index) => newSelectedStates[index])
-          .map((row) => row.id);
-      },
-      { deep: true }
-    );
+    // Format date to a readable format
     const formatDate = (dateString) => {
       const options = { year: "numeric", month: "long", day: "numeric" };
       return new Date(dateString).toLocaleDateString("en-US", options);
     };
+
+    // Format time string (HH:MM:SS) to a 12-hour format
     function formatTime(timeString) {
       // Create a date object for the current date and set the time using the provided timeString (HH:MM:SS)
       const [hours, minutes, seconds] = timeString.split(":");
       const date = new Date();
 
       date.setHours(hours, minutes, seconds);
-
       // Format the time as '8:00 PM'
       return date.toLocaleTimeString([], {
         hour: "numeric",
@@ -147,6 +110,7 @@ export default {
         hour12: true,
       });
     }
+
     const confirmDelete = (task) => {
       taskToDelete.value = task;
       showDeleteConfirmation.value = true;
@@ -160,6 +124,75 @@ export default {
     // provide("deleteTask", deleteTask);
     // Fetch tasks from the API
     // Fetch tasks from the API
+
+    const handleItemCheck = (checked, item, task) => {
+      if (checked) {
+        // Find or create corresponding task in doneTasks
+        let doneTask = doneTasks.value.find(
+          (t) => t.task_title === task.task_title
+        );
+
+        if (!doneTask) {
+          doneTask = {
+            ...task,
+            items: [],
+          };
+          doneTasks.value.push(doneTask);
+        }
+
+        // Move item to done task
+        doneTask.items.push({
+          ...item,
+          selected: true,
+        });
+
+        // Remove item from progress task
+        const taskIndex = inProgressTasks.value.findIndex(
+          (t) => t.id === task.id
+        );
+        inProgressTasks.value[taskIndex].items = task.items.filter(
+          (i) => i.id !== item.id
+        );
+
+        // Remove empty tasks
+        inProgressTasks.value = inProgressTasks.value.filter(
+          (t) => t.items.length > 0
+        );
+      }
+    };
+
+    const handleItemUncheck = (checked, item, task) => {
+      if (!checked) {
+        // Find or create corresponding task in inProgressTasks
+        let progressTask = inProgressTasks.value.find(
+          (t) => t.task_title === task.task_title
+        );
+
+        if (!progressTask) {
+          progressTask = {
+            ...task,
+            items: [],
+          };
+          inProgressTasks.value.push(progressTask);
+        }
+
+        // Move item back to progress task
+        progressTask.items.push({
+          ...item,
+          selected: false,
+        });
+
+        // Remove item from done task
+        const taskIndex = doneTasks.value.findIndex((t) => t.id === task.id);
+        doneTasks.value[taskIndex].items = task.items.filter(
+          (i) => i.id !== item.id
+        );
+
+        // Remove empty tasks
+        doneTasks.value = doneTasks.value.filter((t) => t.items.length > 0);
+      }
+    };
+    //Fetch All from db
     const loadTasks = async () => {
       try {
         pageLoadingState.value = true;
@@ -177,13 +210,15 @@ export default {
         pageLoadingState.value = false;
       }
     };
-
     // Call the method when the component is mounted
     onMounted(() => {
       loadTasks();
     });
 
     return {
+      handleItemCheck,
+      handleItemUncheck,
+      cancelDelete,
       deleteConfirmations,
       showDeleteConfirmation,
       hideDeleteConfirmation,

@@ -60,7 +60,7 @@
         <div
           v-for="task in inProgressTasks"
           :key="task.id"
-          class="col q-pa-md onboarding-border-accent-0 onboarding-border-radius-10 q-mb-lg q-mr-lg"
+          class="task-card col q-pa-md onboarding-border-accent-0 onboarding-border-radius-10 q-mb-lg q-mr-lg"
         >
           <q-expansion-item expand-separator :label="task.task_title">
             <template v-slot:header="{ expanded }">
@@ -138,7 +138,14 @@
                       class="q-py-none"
                     >
                       <q-item-section avatar>
-                        <q-checkbox v-model="item.selected" />
+                        <q-checkbox
+                          color="teal"
+                          size="sm"
+                          v-model="item.selected"
+                          @update:model-value="
+                            (val) => handleItemCheck(val, item, task)
+                          "
+                        />
                       </q-item-section>
                       <q-item-section>{{ item.task_name }}</q-item-section>
                       <q-item-section side>{{
@@ -163,28 +170,34 @@
           done
         </div>
         <div
-          class="col q-pa-md onboarding-border-accent-0 onboarding-border-radius-10 q-mr-lg"
+          v-for="task in doneTasks"
+          :key="task.id"
+          class="task-card col q-pa-md onboarding-border-accent-0 onboarding-border-radius-10 q-mb-lg q-mr-lg"
         >
-          <q-expansion-item expand-separator label="To-Do List">
+          <q-expansion-item
+            v-model="isExpanded"
+            expand-separator
+            label="To-Do List"
+          >
             <template v-slot:header="{ expanded }">
               <q-item-section
                 v-if="!expanded"
                 class="onboarding-text-accent-0 text-semibold"
               >
-                Task Name
+                {{ task.task_title }}
               </q-item-section>
               <q-item-section
                 v-if="!expanded"
                 side
                 class="onboarding-text-accent-0 text-semibold"
               >
-                January 0, 2024
+                {{ formatDate(task.created_at) }}
               </q-item-section>
               <q-item-section
                 v-else
                 class="onboarding-text-accent-0 text-semibold"
               >
-                To-Do List
+                {{ task.task_title }}
               </q-item-section>
               <q-item-section v-if="expanded" side>
                 <q-icon name="more_horiz" />
@@ -193,19 +206,30 @@
 
             <q-card>
               <q-card-section class="q-pa-none">
-                <div class="col">
-                  <q-list>
-                    <!-- Loop through tasks -->
-                    <q-item class="q-py-none">
-                      <q-item-section>
-                        <q-checkbox />
-                      </q-item-section>
-                      <q-item-section>Task Name</q-item-section>
-                    </q-item>
-                  </q-list>
-                </div>
+                <q-list>
+                  <q-item
+                    v-for="item in task.items"
+                    :key="item.id"
+                    class="q-py-none"
+                  >
+                    <q-item-section>
+                      <q-checkbox
+                        color="teal"
+                        size="sm"
+                        v-model="item.selected"
+                        @update:model-value="
+                          (val) => handleItemUncheck(val, item, task)
+                        "
+                      />
+                    </q-item-section>
+                    <q-item-section>{{ item.task_name }}</q-item-section>
+                    <q-item-section side>{{
+                      formatTime(item.time)
+                    }}</q-item-section>
+                  </q-item>
+                </q-list>
                 <div class="text-right onboarding-text-accent-0 text-semibold">
-                  January 0, 2024
+                  {{ formatDate(task.created_at) }}
                 </div>
               </q-card-section>
             </q-card>
